@@ -154,7 +154,7 @@ body.dark .bar{background:#2a303b}body.dark .stat.link:hover{border-color:#4d6aa
 </style>
 </head>
 <body>
-<aside><div class="brand" id="brand"><b>🏔️ SUMMIT NEXT</b><small>School ERP v0.54</small></div><nav id="nav"></nav></aside>
+<aside><div class="brand" id="brand"><b>🏔️ SUMMIT NEXT</b><small>School ERP v0.56</small></div><nav id="nav"></nav></aside>
 <main class="main">
   <div class="head"><div><h1 id="title"></h1><div class="muted tiny" id="sub"></div></div>
     <div class="r"><div class="qs noprint"><input id="qs" type="search" autocomplete="off"><div class="qs-r" id="qsr" hidden></div></div><span class="tag labtag" id="lab"></span><div class="langsw" id="lang" role="group" aria-label="Language / ภาษา"></div></div></div>
@@ -3114,7 +3114,7 @@ const QR = (function () {
 })();
 window.SummitQR = QR;
 
-/* SUMMIT School ERP NEXT v0.54 — UI layer. State lives in localStorage (synthetic data only). */
+/* SUMMIT School ERP NEXT v0.56 — UI layer. State lives in localStorage (synthetic data only). */
 /* v0.49 ease-of-use texts */
 Object.assign(window.SummitI18n, {
   em_easy: ['โหมดง่าย', 'Simple mode'], em_full: ['โหมดเต็ม', 'Full mode'], em_toFull: ['แสดงทุกเมนู (โหมดเต็ม)', 'Show all menus (full mode)'], em_toEasy: ['กลับโหมดง่าย', 'Back to simple mode'],
@@ -3330,6 +3330,10 @@ Object.assign(window.SummitI18n, {
 });
 /* v0.40 tax page texts */
 Object.assign(window.SummitI18n, {
+  fd_first: ['คาบแรกของคอร์สนี้:', 'First class of this course:'], fd_earlier: ['เริ่มเร็วขึ้นได้:', 'Start earlier:'], fd_pick: ['หรือเลือกวันเริ่มเอง:', 'Or pick the first day:'],
+  fd_note: ['เลือกวันที่ไม่ใช่วันที่ 1 → ระบบเปลี่ยนเป็น "รายเดือนนับจากวันเริ่ม" ให้ (เช่น 30/11 – 29/12) · ดูราคาในขั้นที่ 4 อีกครั้ง', 'A first day other than the 1st makes it "monthly from start" (e.g. 30/11 – 29/12) · check the price in step 4'],
+});
+Object.assign(window.SummitI18n, {
   cd_btn: ['เปลี่ยนวันเรียน', 'Change days'], cd_title: ['เปลี่ยนวันเรียนประจำสัปดาห์', 'Change weekly days'],
   cd_now: ['ตอนนี้เรียน: {d}', 'Now: {d}'], cd_from: ['เริ่มใช้วันใหม่ตั้งแต่', 'New days from'], cd_pick: ['เลือกวันเรียนใหม่ (กดเลือกได้หลายวัน)', 'Pick the new days (several allowed)'],
   cd_sum: ['คาบก่อนวันที่ {d} เก็บไว้เหมือนเดิม · รวม {a} → {b} คาบ', 'Classes before {d} stay · {a} → {b} classes in total'],
@@ -3359,7 +3363,7 @@ Object.assign(window.SummitI18n, {
 Object.assign(window.SummitI18n, {
   nav_shop: ['ขายหนังสือ/อุปกรณ์', 'Books & materials'], ai_lowStock: ['สินค้าใกล้หมดสต็อก', 'Items running low'],
   sh_t_sell: ['ขาย', 'Sell'], sh_t_items: ['สินค้าและสต็อก', 'Items & stock'], sh_t_hist: ['ประวัติ/สรุป', 'History & summary'],
-  sh_title: ['ขายหนังสือและอุปกรณ์', 'Books & materials'],
+  shp_title: ['ขายหนังสือและอุปกรณ์', 'Books & materials'],
   sh_buyer: ['ผู้ซื้อ', 'Buyer'], sh_student: ['นักเรียน', 'Student'], sh_walkin: ['บุคคลทั่วไป', 'Walk-in'], sh_buyerName: ['ชื่อผู้ซื้อ', 'Buyer name'],
   sh_add: ['+ เพิ่มรายการ', '+ Add item'], sh_item: ['สินค้า', 'Item'], sh_qty: ['จำนวน', 'Qty'], sh_price: ['ราคา/ชิ้น', 'Unit price'], sh_left: ['เหลือ {n}', '{n} left'],
   sh_total: ['รวม', 'Total'], sh_save: ['บันทึกการขาย + ออกใบเสร็จ', 'Save sale + receipt'], sh_saved: ['บันทึกการขายแล้ว', 'Sale saved'],
@@ -3378,7 +3382,7 @@ Object.assign(window.SummitI18n, {
   sh_k_in: ['รับเข้า', 'In'], sh_k_sale: ['ขาย', 'Sold'], sh_k_adjust: ['ปรับยอด', 'Adjust'], sh_k_void: ['ยกเลิกขาย คืนสต็อก', 'Sale cancelled'],
   sh_voidQ: ['ยกเลิกใบเสร็จนี้? ของจะกลับเข้าสต็อก ใบเสร็จยังอยู่แต่ถูกขีดฆ่า', 'Cancel this receipt? Goods return to stock; the receipt stays, crossed out'],
   sh_receipt: ['ใบเสร็จรับเงิน (ขายสินค้า)', 'Receipt (goods)'], sh_vatLine: ['ตำราเรียนยกเว้นภาษีมูลค่าเพิ่ม ตามมาตรา 81(1)(ฉ) แห่งประมวลรัษฎากร', 'Textbooks VAT-exempt under Revenue Code s.81(1)(ฉ)'],
-  sh_note: ['ยอดขายนับรวมใน "เงินเข้า" ของหน้าการเงิน/รายงาน และใช้เลขใบเสร็จชุดเดียวกับค่าเรียน · ส่งรายการนี้ให้นักบัญชีพร้อมยอดสต็อกสิ้นปี', 'Sales count in money-in on finance/reports and share the tuition receipt series · give this list and year-end stock to your accountant'],
+  shp_note: ['ยอดขายนับรวมใน "เงินเข้า" ของหน้าการเงิน/รายงาน และใช้เลขใบเสร็จชุดเดียวกับค่าเรียน · ส่งรายการนี้ให้นักบัญชีพร้อมยอดสต็อกสิ้นปี', 'Sales count in money-in on finance/reports and share the tuition receipt series · give this list and year-end stock to your accountant'],
   sh_bought: ['ซื้อหนังสือ/อุปกรณ์', 'Books/materials bought'],
   ex_stock: ['ซื้อสินค้ามาขาย (สต็อก)', 'Goods for resale (stock)'],
   tx_vatGoods: ['ยอดขายสินค้าที่ไม่ใช่ตำราเรียน 12 เดือน', 'Non-textbook goods sold, 12 months'],
@@ -4077,6 +4081,20 @@ Object.assign(window.SummitI18n, {
       ${quick ? `<div class="flex wrap" style="margin:6px 0 10px"><span class="tiny muted">${t('wk_quick')}:</span>${quick}</div>` : ''}
       <div class="wk-grid" style="--wk-n:${order.length}">${cols}</div></div>`;
   }
+  /** v0.56 first class of a new course, right above the calendar: shows it and lets you start earlier (e.g. Mon 30/11 instead of Wed 2/12) */
+  function firstDayBox() {
+    const u = ui.enroll, td = today(), reg = u.sessions.filter(x => !x.makeup).map(x => x.date).sort(), first = reg[0];
+    const closed = new Set(S.settings.closedDates || []), low = [u.bookDate, u.regDate].filter(Boolean).concat([td]).sort()[0];
+    const opts = [];
+    if (first) for (let d = E.addDays(first, -13); d < first; d = E.addDays(d, 1)) {
+      if (d < low || closed.has(d)) continue;
+      if (u.slots.some(sl => sl.dow === E.dowOf(d) && !E.classOff(S, sl.groupId, d))) opts.push(d);
+    }
+    return `<div class="alert info" id="first-day" style="margin:6px 0"><div>📅 ${t('fd_first')} <b>${first ? esc(dn(E.dowOf(first))) + ' ' + dd(first) : '—'}</b></div>
+      ${opts.length ? `<div class="flex" style="margin-top:6px"><span class="tiny">${t('fd_earlier')}</span>${opts.slice(-4).map(d => `<button class="btn sm" data-act="startFrom" data-date="${d}">${esc(dn(E.dowOf(d)))} ${dd(d).slice(0, 5)}</button>`).join('')}</div>` : ''}
+      <div class="flex" style="margin-top:6px;align-items:center"><span class="tiny">${t('fd_pick')}</span><input type="date" data-bind="enroll.firstDay" value="${esc(first || '')}" style="max-width:170px"></div>
+      <div class="tiny muted" style="margin-top:4px">${t('fd_note')}</div></div>`;
+  }
   function enrollForm() {
     const u = ui.enroll, td = today();
     const editing = u.editingId ? S.enrollments.find(e => e.id === u.editingId) : null;
@@ -4178,7 +4196,7 @@ Object.assign(window.SummitI18n, {
         ${fld(t('e_regDate'), `<input type="date" data-bind="enroll.regDate" data-live value="${esc(u.regDate || '')}" min="${esc(u.bookDate || '')}" max="${td}"><small class="muted">${t('e_regHint')}${u.regDate ? ' · <b>' + dd(u.regDate) + '</b>' : ''}</small>`)}
       </div>${dateErr ? `<div class="alert err">${t('e_dateErr')}</div>` : ''}</div>`}${editing ? '' : `<button class="btn sm" data-act="go" data-page="students" data-new="1">${t('e_quickStudent')}</button>`}</div>
       ${weekPicker()}
-      <div class="card"><div class="spaced"><h3>${t('e_step4')} · ${isPack && u.sessions.length ? dd(u.sessions[0].date) + ' – ' + dd(u.sessions[u.sessions.length - 1].date) : mm(u.month)}</h3><div class="flex">${editing || isPack ? '' : `<button class="btn sm" data-act="calMonth" data-d="-1">${t('cal_prev')}</button><button class="btn sm" data-act="calMonth" data-d="1">${t('cal_next')}</button>`}<button class="btn sm" data-act="autofill">${t('e_autofill')}</button></div></div><p class="note">${t('e_calNote')}</p>
+      <div class="card"><div class="spaced"><h3>${t('e_step4')} · ${isPack && u.sessions.length ? dd(u.sessions[0].date) + ' – ' + dd(u.sessions[u.sessions.length - 1].date) : mm(u.month)}</h3><div class="flex">${editing || isPack ? '' : `<button class="btn sm" data-act="calMonth" data-d="-1">${t('cal_prev')}</button><button class="btn sm" data-act="calMonth" data-d="1">${t('cal_next')}</button>`}<button class="btn sm" data-act="autofill">${t('e_autofill')}</button></div></div><p class="note">${t('e_calNote')}</p>${!editing && u.slots.length ? firstDayBox() : ''}
         ${calMonths.map(calGrid).join('')}${!u.slots.length ? `<p class="note">${t('cal_needSlot')}</p>` : ''}<p class="note">${u.sessions.length} ${t('sessions')}${p.makeupSessions ? ` · ${p.makeupSessions} ${t('mk')}` : ''}</p>
         ${u.groups.length ? `<div class="mk-box"><h4>${t('e_mkTitle')}</h4><p class="note">${t('e_mkNote')}</p><div class="fields two">
           ${fld(t('group'), sel('enroll.mkGroup', u.groups.map(id => [id, G(id).code + ' · ' + G(id).start + '–' + G(id).end]), false))}
@@ -5176,7 +5194,7 @@ Object.assign(window.SummitI18n, {
   /* ---- v0.52 shop page ---- */
   pages.shop = () => {
     const u = ui.shop, tabs = ['sell', 'items', 'hist'];
-    const head = `<div class="card"><div class="spaced"><h3>🛒 ${t('sh_title')} ${help('shop')}</h3></div>
+    const head = `<div class="card"><div class="spaced"><h3>🛒 ${t('shp_title')} ${help('shop')}</h3></div>
       <div class="tabs">${tabs.map(k => `<button class="tab ${u.tab === k ? 'on' : ''}" data-act="shTab" data-tab="${k}">${t('sh_t_' + k)}${k === 'items' && E.stockList(S).some(p => p.low) ? ' ⚠' : ''}</button>`).join('')}</div></div>`;
     return head + (u.last ? shReceipt(u.last) : '') + ({ sell: shSell, items: shItems, hist: shHist }[u.tab] || shSell)(u);
   };
@@ -5236,7 +5254,7 @@ Object.assign(window.SummitI18n, {
     const r = (k, v, b) => `<div class="rowline"><span>${k}</span>${b ? '<b>' + v + '</b>' : '<span>' + v + '</span>'}</div>`;
     return `<div class="card"><div class="spaced"><h3>${t('sh_sum')}</h3><input type="month" data-bind="shop.month" data-live value="${esc(m)}" style="width:170px"></div>
       ${r(t('sh_sales') + ' (' + sm.count + ')', money(sm.total), true)}${r(t('sh_exempt'), money(sm.exempt))}${r(t('sh_taxable'), money(sm.taxable))}${r(t('sh_cogs'), money(sm.cogs))}${r(t('sh_gross'), money(sm.gross), true)}
-      ${r(t('sh_stockVal'), money(E.stockList(S).reduce((a, p) => a + p.value, 0)))}<p class="note">${t('sh_note')}</p></div>
+      ${r(t('sh_stockVal'), money(E.stockList(S).reduce((a, p) => a + p.value, 0)))}<p class="note">${t('shp_note')}</p></div>
       <div class="card"><h3>${t('sh_receipts')}</h3><div class="overflow"><table><thead><tr><th>No.</th><th>${t('date')}</th><th>${t('sh_buyer')}</th><th>${t('sh_item')}</th><th>${t('amount')}</th><th></th></tr></thead><tbody>
       ${sales.map(x => `<tr class="${x.voided ? 'dim' : ''}"><td>${x.voided ? '<s>' + esc(x.receiptNo) + '</s>' : esc(x.receiptNo)}</td><td>${dd(x.date)}</td><td>${x.studentId ? esc(STU(x.studentId).name || '') : esc(x.buyer)}</td><td class="tiny">${x.lines.map(l => esc(l.name) + ' ×' + l.qty).join(', ')}</td><td>${money(x.total)}</td>
         <td><div class="flex"><button class="btn sm" data-act="shOpenRc" data-id="${x.id}">🧾</button>${x.voided ? '' : `<button class="btn sm danger" data-act="shVoid" data-id="${x.id}">${t('cancel')}</button>`}</div></td></tr>`).join('') || `<tr><td colspan="6">${t('none')}</td></tr>`}</tbody></table></div></div>
@@ -5966,7 +5984,7 @@ Object.assign(window.SummitI18n, {
     document.documentElement.lang = lang() ? 'en' : 'th';
     applyTheme();
     const hid = (PREF.hideNav || []).filter(p => !['dashboard', 'settings'].includes(p));
-    $('#brand').innerHTML = (S.settings.logo ? `<img src="${S.settings.logo}" alt="">` : '') + `<b>${S.settings.logo ? esc(S.settings.schoolName || 'SUMMIT NEXT') : '🏔️ SUMMIT NEXT'}</b><small>School ERP v0.54</small>`;
+    $('#brand').innerHTML = (S.settings.logo ? `<img src="${S.settings.logo}" alt="">` : '') + `<b>${S.settings.logo ? esc(S.settings.schoolName || 'SUMMIT NEXT') : '🏔️ SUMMIT NEXT'}</b><small>School ERP v0.56</small>`;
     const ai = allActions(), cnt = keys => ai.filter(i => keys.includes(i.key)).reduce((a, i) => a + i.n, 0), urgent = keys => ai.some(i => keys.includes(i.key) && i.sev === 3);
     const BADGE = { enroll: ['pending', 'review', 'offerSoon'], attendance: ['attendance'], leads: ['leadsNew', 'trialFollow', 'trialMoved', 'trialToday'], finance: ['overdue', 'refundLeft'], tax: ['txWht', 'txSso', 'txCert', 'txPnd1k', 'txPnd50', 'txPnd51', 'txVat', 'txSetup', 'txClose'], books: ['bkUnpaid', 'bkAccrOld', 'bkReview'] };
     const easy = isEasy(), EASY = ['dashboard', 'attendance', 'students', 'enroll', 'finance', 'shop', 'books'];
@@ -6024,6 +6042,7 @@ Object.assign(window.SummitI18n, {
       const u = ui.enroll; u.sessions = E.autoSessions(S, u.slots, u.month, monthFrom()); u.confirmed = false; u.mkDate = '';
     }
     if (el.dataset.bind === 'enroll.monthStart' && !ui.enroll.editingId && ev.type === 'change') startFrom(ui.enroll.monthStart);
+    if (el.dataset.bind === 'enroll.firstDay' && !ui.enroll.editingId && ev.type === 'change') { startFrom(ui.enroll.firstDay); render(); }
     if (el.dataset.bind === 'enroll.bookDate' && !ui.enroll.editingId) { const u = ui.enroll; u.askDone = false;
       if (u.kind === 'month') u.sessions = E.normalizeSessions(E.autoSessions(S, u.slots, u.month, monthFrom()).concat(u.sessions.filter(x => x.makeup))); }
     if (el.dataset.bind === 'enroll.packStart' || el.dataset.bind === 'enroll.packCount') packRegen();
