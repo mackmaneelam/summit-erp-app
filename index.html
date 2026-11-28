@@ -126,7 +126,7 @@ table{width:100%;border-collapse:collapse}th,td{padding:9px;text-align:left;bord
 .print-only{display:none}@media print{.print-only{display:block}}
 .rc-dates{margin:6px 0;font-size:13px;line-height:1.6}.rc-sign{margin-top:24px;text-align:right}
 #print-area.slip{max-width:300px;font-size:12px}#print-area.slip .rowline{gap:6px}
-@media print{#print-area.slip{width:72mm;max-width:72mm;font-size:11px;padding:0}aside,.head,.noprint,.toast{display:none!important}.main{margin:0}body.printing:not(.pr-tw) .main>#view>*:not(#print-area){display:none!important}body.printing #print-area{border:0;box-shadow:none}}
+@media print{#print-area.slip{width:72mm;max-width:72mm;font-size:11px;padding:0}aside,.head,.noprint,.toast{display:none!important}.main{margin:0}body.printing:not(.pr-tw):not(.pr-eb) .main>#view>*:not(#print-area){display:none!important}body.printing #print-area{border:0;box-shadow:none}}
 
 .cal.mk{background:#fff4dc;border:2px solid #d99a1e}.tag.mk{background:#fff4dc;color:#8a5a00}.mk-box{margin-top:12px;border-top:1px dashed #d6e1ee;padding-top:10px}.tt-item.lv-M46{border-color:#8a5cd6;background:#f3edfc}
 .del-row td{background:#fff8f8}
@@ -144,17 +144,18 @@ body.dark .alert.ok{background:#14302a;border-color:#245847}body.dark .alert.war
 body.dark .bar{background:#2a303b}body.dark .stat.link:hover{border-color:#4d6aa8}
 .dc{min-height:64px;align-items:stretch;justify-content:flex-start;cursor:pointer;font-weight:700}.dc .n{font-size:13px}.dc small{display:block;text-align:center}.dc.today{outline:2px solid var(--blue)}.dc.pick{background:var(--blue);color:var(--on-blue,#fff)}.dc.pick small{color:inherit}
 .roster-tb td.box{width:34px;text-align:center;color:#8893a5}
+@media print{body.printing.pr-eb .main>#view>*:not(#eb-print){display:none!important}#eb-print{border:0;box-shadow:none;padding:0}.hlp,.hlp-box{display:none!important}#eb-print table{font-size:9.5px}#eb-print td,#eb-print th{padding:2px 4px}#eb-print h3{font-size:14px;margin:0 0 4px}}
 @media print{body.printing.pr-tw .main>#view>*:not(#tw-print){display:none!important}#tw-print{border:0;box-shadow:none}#tw-print .tw-sheet{break-after:page}#tw-print .tw-sheet:last-of-type{break-after:auto}}
 .cd-g{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid var(--line,#e6e9ef)}.cd-g .chip{min-width:90px}
 .tw-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;margin-top:6px}.tw-day{border:1px solid var(--line,#dfe3ea);border-radius:8px;padding:6px;min-height:60px}.tw-dh{font-weight:600;font-size:13px;margin-bottom:4px}
 .tw-item{border-left:3px solid var(--accent,#2f5be0);padding:3px 6px;margin-bottom:5px;font-size:13px;background:rgba(0,0,0,.02);border-radius:4px}.tw-item.dim{opacity:.55}.tw-sheet+.tw-sheet{margin-top:14px}
 @media (max-width:820px){.tw-grid{grid-template-columns:1fr}.tw-day{min-height:0}}
-@media print{body.printing:not(.pr-tw) .main>#view>*:not(#print-area):not(#day-print){display:none!important}#day-print .pr-class:not(.pr-on){display:none!important}#day-print .pr-class{break-inside:avoid;border:0}#day-print .noprint{display:none!important}body.dark{--card:#fff;--ink:#000;background:#fff}}
+@media print{body.printing:not(.pr-tw):not(.pr-eb) .main>#view>*:not(#print-area):not(#day-print){display:none!important}#day-print .pr-class:not(.pr-on){display:none!important}#day-print .pr-class{break-inside:avoid;border:0}#day-print .noprint{display:none!important}body.dark{--card:#fff;--ink:#000;background:#fff}}
 
 </style>
 </head>
 <body>
-<aside><div class="brand" id="brand"><b>🏔️ SUMMIT NEXT</b><small>School ERP v0.56</small></div><nav id="nav"></nav></aside>
+<aside><div class="brand" id="brand"><b>🏔️ SUMMIT NEXT</b><small>School ERP v0.58</small></div><nav id="nav"></nav></aside>
 <main class="main">
   <div class="head"><div><h1 id="title"></h1><div class="muted tiny" id="sub"></div></div>
     <div class="r"><div class="qs noprint"><input id="qs" type="search" autocomplete="off"><div class="qs-r" id="qsr" hidden></div></div><span class="tag labtag" id="lab"></span><div class="langsw" id="lang" role="group" aria-label="Language / ภาษา"></div></div></div>
@@ -1157,6 +1158,41 @@ body.dark .bar{background:#2a303b}body.dark .stat.link:hover{border-color:#4d6aa
     const expenses = exp.reduce((a, x) => a + x.amount, 0);
     return { cashIn, tuitionIn, salesIn, refunds, expenses, byCat, teacherPay: pay, teacherEst: est, teacherActual: tp.length || acc.length ? paidT : null, accrued: accLeft, ssoEr, teachers: th, profit: cashIn - refunds - expenses - pay - ssoEr };
   }
+  /* ---- v0.57 end-of-course board: every active child, when the course ends, when to pay again, renewed or not, how long continuous ----
+   * type: 'sun' (Sunday-only classes), 'pack' (count of classes), 'month' (calendar month or monthly-from-start) */
+  function endBoard(state, today) {
+    const rows = [], regOf = e => e.sessions.filter(x => !x.makeup).map(x => x.date).sort();
+    const days = e => { const by = {}; e.sessions.filter(x => !x.makeup).forEach(x => { const g = groupById(state, x.groupId), k = (g ? g.code : x.groupId); (by[k] = by[k] || new Set()).add(dowOf(x.date)); });
+      return Object.entries(by).map(([k, set]) => ({ code: k, dows: [...set].sort((a, b) => ((a + 6) % 7) - ((b + 6) % 7)) })); };
+    for (const st of state.students) {
+      if (studentStatus(st) !== 'active') continue;
+      const mine = state.enrollments.filter(e => e.studentId === st.id && ['approved', 'pending', 'offered'].includes(e.status) && regOf(e).length)
+        .map(e => { const r = regOf(e), pr = period(e); return { e, first: r[0], last: r[r.length - 1], from: pr.from || r[0], to: pr.to || r[r.length - 1] }; })
+        .sort((a, b) => a.first.localeCompare(b.first));
+      const appr = mine.filter(x => x.e.status === 'approved');
+      if (!appr.length) continue;
+      // current = approved course running today, else the next approved one, else the last that ended within 45 days
+      let cur = appr.find(x => x.first <= today && x.last >= today) || appr.find(x => x.first > today) || appr.filter(x => x.last < today).pop();
+      if (!cur || (cur.last < today && cur.last < addDays(today, -45))) continue;
+      const after = mine.filter(x => x !== cur && x.first > cur.last);
+      const next = after[0] || null, nextPaid = next && next.e.status === 'approved' ? Math.max(0, Math.round((priceAfterDiscount(next.e) - paidFor(state, next.e.id)) * 100) / 100) : null;
+      // continuous courses: walk back while the gap between courses is two weeks or less
+      let streak = 1, since = cur.first; const idx = appr.indexOf(cur);
+      for (let i = idx - 1; i >= 0; i--) { if (appr[i].last >= addDays(appr[i + 1].first, -15)) { streak++; since = appr[i].first; } else break; }
+      const reg = regOf(cur.e), left = reg.filter(d => d >= today).length, done = reg.filter(d => d < today).length;
+      const sunOnly = reg.every(d => dowOf(d) === 0), kind = cur.e.kind || 'month';
+      const type = sunOnly ? 'sun' : kind === 'pack' ? 'pack' : 'month';
+      const due = kind === 'pack' || sunOnly ? cur.last : addDays(cur.to, 1);
+      const owe = Math.max(0, Math.round((priceAfterDiscount(cur.e) - paidFor(state, cur.e.id)) * 100) / 100);
+      rows.push({ studentId: st.id, code: st.code || '', name: st.name || '', nick: st.nickname || '', level: st.level || '', type, kind, enrollmentId: cur.e.id,
+        from: cur.from, to: cur.to, first: cur.first, last: cur.last, total: reg.length, done, left, due, owe,
+        next: next ? { id: next.e.id, status: next.e.status, from: next.first, owe: nextPaid } : null,
+        nextState: !next ? 'none' : next.e.status !== 'approved' ? 'pending' : nextPaid > 0 ? 'owe' : 'paid',
+        streak, since, days: days(cur.e), soon: !next && cur.last <= addDays(today, 7) });
+    }
+    const ord = { month: 0, pack: 1, sun: 2 };
+    return rows.sort((a, b) => ord[a.type] - ord[b.type] || a.last.localeCompare(b.last) || a.code.localeCompare(b.code));
+  }
   /* ---- v0.53 forecast for a coming month ----
    * Confirmed = approved courses' share of that month (by classes) · waiting = requests not yet approved ·
    * not renewed yet = children who studied the month before and have no request (valued at their last price) ·
@@ -2030,7 +2066,7 @@ body.dark .bar{background:#2a303b}body.dark .stat.link:hover{border-color:#4d6aa
   return {
     parseLine: (line, state, lvl) => parseLine(normalizePaste(line).replace(/\n/g, ' '), state, lvl, groupIndex(state)), normalizePaste,
     STUDENT_STATUS, studentStatus, setStudentStatus, cleanStudentProfile, studentHistory,
-    moneyOverview, moneyTrend, actionItems, attBacklog, setRequestDate, planPeriod, applyPeriod, periodCheck, applyPeriodFixes, teacherWeek, planDays, applyDays, forecastMonth, renewalRate, courseShare, SHOP_CATS, saveProduct, stockQty, stockIn, stockAdjust, sell, voidSale, salesOf, shopSummary, stockList, taxableSales12, LEAD_STEPS, CEFR, addLead, setLeadStep, convertLead, leadFunnel, trialsOn, linkFamily, unlinkFamily, familyOf, familyBalance, atRisk, packsLow,
+    moneyOverview, moneyTrend, actionItems, attBacklog, setRequestDate, planPeriod, applyPeriod, periodCheck, applyPeriodFixes, teacherWeek, planDays, applyDays, endBoard, forecastMonth, renewalRate, courseShare, SHOP_CATS, saveProduct, stockQty, stockIn, stockAdjust, sell, voidSale, salesOf, shopSummary, stockList, taxableSales12, LEAD_STEPS, CEFR, addLead, setLeadStep, convertLead, leadFunnel, trialsOn, linkFamily, unlinkFamily, familyOf, familyBalance, atRisk, packsLow,
     addLevelRecord, giveStar, removeStar, starsOf, setSubstitute, teacherOn, logContact, findDuplicates, duplicatePairs, mergeStudents,
     weeklyPattern, slotsOf, classOff, cancelledOn, setDiscount, discountOf, priceAfterDiscount, hasSibling, teacherHours, addExpense, voidExpense, monthlyPL, packSessions, smartPackSessions, spanEnd, spanSessions, priceOpts, period, nextReceiptNo, voidPayment, walletBalance, heldBalance, applyWallet, refund, cancelClassDate, repriceOpen, archiveCandidates, archiveOld, offerDeadline, expireOffers, skipOffer, queuePosition, alternatives, syncCredit, expireCredits, openCredits, bookMakeup, cancelMakeup,
     renewalList, runRenewals, housekeeping, promptPayPayload, crc16, studentInClass, addDays, goLive, isDemoStudent,
@@ -3114,7 +3150,7 @@ const QR = (function () {
 })();
 window.SummitQR = QR;
 
-/* SUMMIT School ERP NEXT v0.56 — UI layer. State lives in localStorage (synthetic data only). */
+/* SUMMIT School ERP NEXT v0.58 — UI layer. State lives in localStorage (synthetic data only). */
 /* v0.49 ease-of-use texts */
 Object.assign(window.SummitI18n, {
   em_easy: ['โหมดง่าย', 'Simple mode'], em_full: ['โหมดเต็ม', 'Full mode'], em_toFull: ['แสดงทุกเมนู (โหมดเต็ม)', 'Show all menus (full mode)'], em_toEasy: ['กลับโหมดง่าย', 'Back to simple mode'],
@@ -3329,6 +3365,21 @@ Object.assign(window.SummitI18n, {
   err_overRepay: ['คืนเกินยอดที่ค้างกรรมการ', 'More than the balance owed'], err_badMonth: ['เลือกเดือน', 'Pick a month']
 });
 /* v0.40 tax page texts */
+Object.assign(window.SummitI18n, {
+  eb_btn: ['สรุปวันหมดคอร์ส', 'Course end list'], eb_title: ['สรุปวันหมดคอร์ส และวันต้องจ่ายต่อ', 'Course ends & renewal dates'], eb_asof: ['ข้อมูล ณ {d}', 'As of {d}'],
+  eb_sum: ['ทั้งหมด {n} คน · ต่อแล้ว {a} · รออนุมัติ {p} · ยังไม่ต่อ {z}', '{n} children · renewed {a} · waiting {p} · not yet {z}'],
+  eb_t_month: ['รายเดือน', 'Monthly'], eb_t_pack: ['รายครั้ง (นับคาบ)', 'Class packs'], eb_t_sun: ['วันอาทิตย์', 'Sunday'],
+  eb_stu: ['นักเรียน', 'Student'], eb_days: ['วันเรียน', 'Days'], eb_period: ['คอร์สตอนนี้', 'Current course'], eb_prog: ['เรียนแล้ว', 'Done'], eb_last: ['คาบสุดท้าย', 'Last class'],
+  eb_due: ['ต้องจ่ายต่อภายใน', 'Renew by'], eb_next: ['คอร์สถัดไป', 'Next course'], eb_streak: ['เรียนต่อเนื่อง', 'Continuous'], eb_told: ['แจ้งแล้ว', 'Told'],
+  eb_left: ['เหลือ {n}', '{n} left'], eb_paid: ['✓ ต่อแล้ว จ่ายแล้ว', '✓ Renewed, paid'], eb_owe: ['ต่อแล้ว ค้าง {a}', 'Renewed, owes {a}'], eb_pend: ['รออนุมัติ', 'Waiting'], eb_none: ['— ยังไม่ต่อ', '— Not renewed'],
+  eb_curOwe: ['ค้างคอร์สนี้ {a}', 'owes {a} on this'], eb_str: ['{n} คอร์ส (ตั้งแต่ {m})', '{n} courses (since {m})'], eb_new: ['คอร์สแรก', 'First course'],
+  eb_show: ['แสดง', 'Show'], eb_all: ['ทุกคน', 'Everyone'], eb_notyet: ['เฉพาะยังไม่ต่อ/รออนุมัติ', 'Not renewed / waiting only'], eb_week: ['เฉพาะหมดใน 14 วัน', 'Ending within 14 days'],
+  eb_print: ['พิมพ์ (A4 แนวนอน)', 'Print (A4 landscape)'], eb_copy: ['คัดลอกรายชื่อยังไม่ต่อ', 'Copy not-renewed list'],
+  eb_copyHead: ['รายชื่อยังไม่ต่อคอร์ส ({d})', 'Not renewed yet ({d})'],
+  eb_note: ['ต้องจ่ายต่อภายใน = วันถัดจากวันหมดช่วงคอร์ส (รายครั้งและวันอาทิตย์ = วันคาบสุดท้าย) · ⚠ = หมดภายใน 7 วันและยังไม่ต่อ · เรียนต่อเนื่อง = คอร์สที่ต่อกันโดยเว้นไม่เกิน 2 สัปดาห์ · ช่อง "แจ้งแล้ว" ไว้ติ๊กด้วยปากกา', 'Renew by = day after the course period (packs and Sunday = last class) · ⚠ = ends within 7 days, not renewed · continuous = courses with gaps of 2 weeks or less · tick "Told" by hand'],
+  eb_empty: ['ไม่มีนักเรียนตามเงื่อนไขนี้', 'No children match'],
+  hp_eb: ['ใช้ตอนต้นสัปดาห์หรือปลายเดือน: พิมพ์แผ่นเดียวดูว่าใครใกล้หมด ใครยังไม่จ่ายต่อ แล้วติ๊กช่อง "แจ้งแล้ว" เมื่อทักผู้ปกครอง', 'Use weekly or at month end: one sheet shows who ends soon and who hasn\'t renewed; tick "Told" as you message parents'],
+});
 Object.assign(window.SummitI18n, {
   fd_first: ['คาบแรกของคอร์สนี้:', 'First class of this course:'], fd_earlier: ['เริ่มเร็วขึ้นได้:', 'Start earlier:'], fd_pick: ['หรือเลือกวันเริ่มเอง:', 'Or pick the first day:'],
   fd_note: ['เลือกวันที่ไม่ใช่วันที่ 1 → ระบบเปลี่ยนเป็น "รายเดือนนับจากวันเริ่ม" ให้ (เช่น 30/11 – 29/12) · ดูราคาในขั้นที่ 4 อีกครั้ง', 'A first day other than the 1st makes it "monthly from start" (e.g. 30/11 – 29/12) · check the price in step 4'],
@@ -4007,8 +4058,8 @@ Object.assign(window.SummitI18n, {
         ${u.imp.result ? `<div class="alert ok">${esc(t('i_done', u.imp.result))}${u.imp.result.req ? '<br>' + esc(t('i_reqDone', u.imp.result.req)) : ''}</div>` : ''}
         <div class="flex"><button class="btn primary" data-act="impDo" ${pr.rows.length && u.imp.shown ? '' : 'disabled'}>${t('i_do', { n: pr.rows.length })}</button><button class="btn" data-act="impClose">${t('close')}</button></div></div>`;
     }
-    return stc + pcc + dupc + imp + form + detail + `<div class="card"><div class="spaced"><h3>${t('s_title')} (${list.length})</h3><div class="flex">
-      <button class="btn sm" data-act="dupOpen">👥 ${t('du_btn')}</button><button class="btn sm" data-act="pcOpen">🔍 ${t('pc_btn')}</button>
+    return stc + (u.eb ? endBoardCard() : '') + pcc + dupc + imp + form + detail + `<div class="card"><div class="spaced"><h3>${t('s_title')} (${list.length})</h3><div class="flex">
+      <button class="btn sm" data-act="dupOpen">👥 ${t('du_btn')}</button><button class="btn sm" data-act="pcOpen">🔍 ${t('pc_btn')}</button><button class="btn sm" data-act="ebOpen">🗓 ${t('eb_btn')}</button>
       <select data-bind="students.fStatus" data-live><option value="">${t('ss_all')} (${base.length})</option>${E.STUDENT_STATUS.map(k => `<option value="${k}" ${u.fStatus === k ? 'selected' : ''}>${t('ss_' + k)} (${cnt(k)})</option>`).join('')}</select>
       ${S.students.some(E.isDemoStudent) ? `<label class="check tiny"><input type="checkbox" data-act="toggleHideDemo" ${u.hideDemo ? 'checked' : ''}> ${t('i_hideDemo')}</label>` : ''}
       <button class="btn" data-act="impOpen">${t('i_open')}</button>
@@ -4241,6 +4292,28 @@ Object.assign(window.SummitI18n, {
   }
   /** Applied / registered / entered dates; "back-entry" tag when typed in after the fact. */
   const monthLabel = e => e.kind === 'span' ? `${dd(e.spanFrom)}–${dd(e.spanTo)} <span class="badge b-offered">${t('k_spanTag')}</span>` : e.kind === 'pack' && e.sessions.length ? `${dd(e.sessions[0].date)}–${dd(e.sessions[e.sessions.length - 1].date)} <span class="badge b-offered">${t('k_tag')}</span>` : mm(e.month);
+  /** v0.57 one-sheet list of course ends and renewal dates (students page) */
+  function endBoardCard() {
+    const u = ui.students, f = u.ebF || 'all', td = today(), all = E.endBoard(S, td);
+    const rows = all.filter(r => f === 'all' || (f === 'notyet' && r.nextState !== 'paid' && r.nextState !== 'owe') || (f === 'soon' && r.last <= E.addDays(td, 14)));
+    const cnt = k => all.filter(r => k === 'ok' ? ['paid', 'owe'].includes(r.nextState) : r.nextState === k).length;
+    const dm = d => dd(d).slice(0, 5), my = d => d.slice(5, 7) + '/' + String(+d.slice(0, 4) + (lang() === 1 ? 0 : 543)).slice(2);
+    const dayTxt = r => r.days.map(x => esc(x.code) + ' ' + x.dows.map(dw => esc(dn(dw))).join('+')).join(', ');
+    const nx = r => r.nextState === 'paid' ? `<span style="color:var(--ok)">${t('eb_paid')}</span>` : r.nextState === 'owe' ? t('eb_owe', { a: money(r.next.owe) }) : r.nextState === 'pending' ? `<b>${t('eb_pend')}</b>` : `<b style="color:var(--err)">${t('eb_none')}</b>`;
+    const sec = ['month', 'pack', 'sun'].map(tp => { const rs = rows.filter(r => r.type === tp); if (!rs.length) return '';
+      return `<tr><th colspan="11" style="text-align:left;background:var(--soft,#f3f5f9)">${t('eb_t_' + tp)} (${rs.length})</th></tr>` + rs.map((r, i) => `<tr${r.soon ? ' style="background:#fff4f2"' : ''}>
+        <td>${i + 1}</td><td>${r.soon ? '⚠ ' : ''}<b>${esc(r.nick || r.name)}</b> <span class="tiny muted">${esc(r.code)}</span></td><td class="tiny">${esc(lv(r.level))}</td>
+        <td class="tiny">${dayTxt(r)}</td><td>${dm(r.from)}–${dm(r.to)}</td><td>${r.done}/${r.total} <span class="tiny muted">${t('eb_left', { n: r.left })}</span></td>
+        <td>${esc(dn(E.dowOf(r.last)))} ${dm(r.last)}</td><td><b>${dm(r.due)}</b>${r.owe > 0 ? ` <span class="tiny" style="color:var(--err)">${t('eb_curOwe', { a: money(r.owe) })}</span>` : ''}</td>
+        <td>${nx(r)}${r.next ? ` <span class="tiny muted">${dm(r.next.from)}</span>` : ''}</td><td class="tiny">${r.streak > 1 ? t('eb_str', { n: r.streak, m: my(r.since) }) : t('eb_new')}</td><td style="text-align:center">☐</td></tr>`).join(''); }).join('');
+    const notTxt = [t('eb_copyHead', { d: dd(td) })].concat(all.filter(r => r.nextState === 'none').map(r => `• ${r.nick || r.name} (${r.code}) ${t('eb_last')} ${dm(r.last)} · ${t('eb_due')} ${dm(r.due)}`)).join('\n');
+    return `<div class="card" id="eb-print"><div class="spaced"><h3>🗓 ${t('eb_title')} ${help('eb')}</h3><div class="flex noprint">
+        ${sel('students.ebF', [['all', t('eb_all')], ['notyet', t('eb_notyet')], ['soon', t('eb_week')]])}
+        <button class="btn sm primary" data-act="ebPrint">🖨 ${t('eb_print')}</button><button class="btn sm" data-act="copyText" data-txt="${esc(notTxt)}">📋 ${t('eb_copy')}</button><button class="btn sm" data-act="ebClose">${t('close')}</button></div></div>
+      <div class="tiny">${esc(S.settings.schoolName || '')} · ${t('eb_asof', { d: dd(td) })} · ${t('eb_sum', { n: all.length, a: cnt('ok'), p: cnt('pending'), z: cnt('none') })}</div>
+      <div class="overflow"><table><thead><tr><th>#</th><th>${t('eb_stu')}</th><th></th><th>${t('eb_days')}</th><th>${t('eb_period')}</th><th>${t('eb_prog')}</th><th>${t('eb_last')}</th><th>${t('eb_due')}</th><th>${t('eb_next')}</th><th>${t('eb_streak')}</th><th>${t('eb_told')}</th></tr></thead>
+      <tbody>${sec || `<tr><td colspan="11">${t('eb_empty')}</td></tr>`}</tbody></table></div><p class="tiny muted">${t('eb_note')}</p></div>`;
+  }
   /** v0.54 change weekly days from a date on */
   function cdRow(e) {
     const u = ui.students.cd, st = STU(e.studentId) || {}, slots = u.slots.map(k => { const [groupId, dow] = k.split('|'); return { groupId, dow: +dow }; });
@@ -5813,6 +5886,9 @@ Object.assign(window.SummitI18n, {
     shMvSave: () => { const m = ui.shop.mv, r = m.kind === 'in' ? E.stockIn(S, { productId: m.pid, qty: m.qty, unitCost: m.unitCost, date: m.date, note: m.note, asExpense: m.asExpense }, today()) : E.stockAdjust(S, { productId: m.pid, count: m.count, reason: m.reason }, today());
       if (r.ok) { save(); ui.shop.mv = null; ui.shop.err = null; toast(t('saved')); } else ui.shop.err = r.errors; },
     dupClose: () => { ui.students.dup = false; },
+    ebOpen: () => { ui.page = 'students'; ui.students.eb = true; window.scrollTo(0, 0); },
+    ebClose: () => { ui.students.eb = false; },
+    ebPrint: () => { document.body.classList.add('pr-eb'); setTimeout(() => { printNow('@page{size:A4 landscape;margin:8mm}'); setTimeout(() => document.body.classList.remove('pr-eb'), 900); }, 30); },
     pcOpen: () => { ui.page = 'students'; ui.students.pc = true; ui.students.pcRes = null; ui.students.pcSel = {}; window.scrollTo(0, 0); },
     pcClose: () => { ui.students.pc = false; ui.students.pcRes = null; },
     pcToggle: d => { const o = ui.students.pcSel = ui.students.pcSel || {}; o[d.id] = !(o[d.id] ?? !d.soft); },
@@ -5984,7 +6060,7 @@ Object.assign(window.SummitI18n, {
     document.documentElement.lang = lang() ? 'en' : 'th';
     applyTheme();
     const hid = (PREF.hideNav || []).filter(p => !['dashboard', 'settings'].includes(p));
-    $('#brand').innerHTML = (S.settings.logo ? `<img src="${S.settings.logo}" alt="">` : '') + `<b>${S.settings.logo ? esc(S.settings.schoolName || 'SUMMIT NEXT') : '🏔️ SUMMIT NEXT'}</b><small>School ERP v0.56</small>`;
+    $('#brand').innerHTML = (S.settings.logo ? `<img src="${S.settings.logo}" alt="">` : '') + `<b>${S.settings.logo ? esc(S.settings.schoolName || 'SUMMIT NEXT') : '🏔️ SUMMIT NEXT'}</b><small>School ERP v0.58</small>`;
     const ai = allActions(), cnt = keys => ai.filter(i => keys.includes(i.key)).reduce((a, i) => a + i.n, 0), urgent = keys => ai.some(i => keys.includes(i.key) && i.sev === 3);
     const BADGE = { enroll: ['pending', 'review', 'offerSoon'], attendance: ['attendance'], leads: ['leadsNew', 'trialFollow', 'trialMoved', 'trialToday'], finance: ['overdue', 'refundLeft'], tax: ['txWht', 'txSso', 'txCert', 'txPnd1k', 'txPnd50', 'txPnd51', 'txVat', 'txSetup', 'txClose'], books: ['bkUnpaid', 'bkAccrOld', 'bkReview'] };
     const easy = isEasy(), EASY = ['dashboard', 'attendance', 'students', 'enroll', 'finance', 'shop', 'books'];
