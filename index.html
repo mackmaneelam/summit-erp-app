@@ -155,7 +155,7 @@ body.dark .bar{background:#2a303b}body.dark .stat.link:hover{border-color:#4d6aa
 </style>
 </head>
 <body>
-<aside><div class="brand" id="brand"><b>🏔️ SUMMIT NEXT</b><small>School ERP v0.59</small></div><nav id="nav"></nav></aside>
+<aside><div class="brand" id="brand"><b>🏔️ SUMMIT NEXT</b><small>School ERP v0.60</small></div><nav id="nav"></nav></aside>
 <main class="main">
   <div class="head"><div><h1 id="title"></h1><div class="muted tiny" id="sub"></div></div>
     <div class="r"><div class="qs noprint"><input id="qs" type="search" autocomplete="off"><div class="qs-r" id="qsr" hidden></div></div><span class="tag labtag" id="lab"></span><div class="langsw" id="lang" role="group" aria-label="Language / ภาษา"></div></div></div>
@@ -906,12 +906,17 @@ body.dark .bar{background:#2a303b}body.dark .stat.link:hover{border-color:#4d6aa
   /** v0.46 move a course to a new period: "one month from a start date" (span) or a calendar month. Same weekly days; the paid price is kept unless asked. */
   function planPeriod(state, id, opts, today) {
     const e = state.enrollments.find(x => x.id === id); if (!e || !['approved', 'pending', 'offered', 'waitlisted'].includes(e.status)) return { ok: false, errors: ['badStatus'] };
+    if (opts.kind === 'custom') { // v0.60 dates picked one by one on a calendar → stored as a class-count course
+      const ds = normalizeSessions((opts.dates || []).filter(x => x && x.groupId && /^\d{4}-\d{2}-\d{2}$/.test(x.date)).map(x => ({ groupId: x.groupId, date: x.date })));
+      if (!ds.length) return { ok: false, errors: ['noSessions'] };
+      return planPeriod(state, id, { ...opts, kind: 'pack', from: ds[0].date, count: ds.length, _dates: ds }, today);
+    }
     const kind = ['month', 'pack'].includes(opts.kind) ? opts.kind : 'span', from = String(opts.from || ''), month = kind === 'month' ? String(opts.month || from.slice(0, 7)) : from.slice(0, 7);
     if (kind !== 'month' && !/^\d{4}-\d{2}-\d{2}$/.test(from)) return { ok: false, errors: ['badDate'] };
     const count = Math.floor(Number(opts.count)); if (kind === 'pack' && !(count >= 1 && count <= 40)) return { ok: false, errors: ['shopQty'] };
     if (kind === 'month' && !/^\d{4}-\d{2}$/.test(month)) return { ok: false, errors: ['badMonth'] };
     const slots = slotsOf(e.sessions); if (!slots.length) return { ok: false, errors: ['noSessions'] };
-    const sessions = kind === 'span' ? spanSessions(state, slots, from) : kind === 'pack' ? packFrom(state, slots, from, count) : autoSessions(state, slots, month, month + '-01');
+    const sessions = opts._dates ? opts._dates : kind === 'span' ? spanSessions(state, slots, from) : kind === 'pack' ? packFrom(state, slots, from, count) : autoSessions(state, slots, month, month + '-01');
     if (!sessions.length) return { ok: false, errors: ['noSessions'] };
     const v = validateRequest(state, { id, studentId: e.studentId, month, kind, spanFrom: kind === 'span' ? from : '', sessions }, today);
     if (kind === 'pack' && sessions.length < count) v.errors.push('packSpan');
@@ -3162,7 +3167,7 @@ const QR = (function () {
 })();
 window.SummitQR = QR;
 
-/* SUMMIT School ERP NEXT v0.59 — UI layer. State lives in localStorage (synthetic data only). */
+/* SUMMIT School ERP NEXT v0.60 — UI layer. State lives in localStorage (synthetic data only). */
 /* v0.49 ease-of-use texts */
 Object.assign(window.SummitI18n, {
   em_easy: ['โหมดง่าย', 'Simple mode'], em_full: ['โหมดเต็ม', 'Full mode'], em_toFull: ['แสดงทุกเมนู (โหมดเต็ม)', 'Show all menus (full mode)'], em_toEasy: ['กลับโหมดง่าย', 'Back to simple mode'],
@@ -3190,6 +3195,8 @@ Object.assign(window.SummitI18n, {
   sc_title: ['ตารางเรียนของนักเรียน', 'Student timetable'], sc_prog: ['เรียนแล้ว {a}/{b} คาบ · เหลือ {c}', 'Done {a}/{b} · {c} left'], sc_last: ['คาบสุดท้าย {d}', 'last class {d}'],
   sc_ended: ['จบคอร์สแล้ว', 'Course ended'], sc_renewed: ['ต่อคอร์สแล้ว', 'Renewed'], sc_ending: ['ใกล้หมด', 'Ending soon'], sc_none: ['ยังไม่มีคอร์สที่อนุมัติ', 'No approved course yet'],
   sc_count: ['{n} คาบในเดือนนี้', '{n} classes this month'], sc_todo: ['ยังไม่เช็กชื่อ', 'Not marked'], sc_up: ['รอเรียน', 'Upcoming'], sc_off: ['งดคลาส/วันหยุด', 'Cancelled/holiday'],
+  rp2_custom: ['เลือกวันเอง (กดในปฏิทิน)', 'Pick dates (tap the calendar)'], rp2_newC: ['เลือกไว้: {a} – {b} · {n} คาบ', 'Picked: {a} – {b} · {n} classes'],
+  rp2_calHelp: ['กดวันที่เพื่อเพิ่ม/เอาออก (สีฟ้า = เรียน) ข้ามเดือนได้', 'Tap a date to add/remove (blue = class); may cross months'], rp2_count2: ['เลือกแล้ว {n} คาบ', '{n} classes picked'], rp2_locked: ['= เช็กชื่อแล้ว เอาออกไม่ได้', '= attendance marked, cannot remove'],
   rp2_pack: ['นับครั้ง — ครบจำนวนคาบ ข้ามเดือนได้', 'Count of classes — may cross months'], rp2_count: ['จำนวนคาบ', 'Number of classes'],
   rp2_btn: ['เปลี่ยนช่วงเรียน', 'Change period'], rp2_title: ['เปลี่ยนช่วงเรียน (วันเริ่ม–วันหมด)', 'Change the course period (start–end)'],
   rp2_now: ['ตอนนี้: {a} – {b} · {n} คาบ', 'Now: {a} – {b} · {n} classes'], rp2_kind: ['แบบ', 'Type'], rp2_span: ['1 เดือนนับจากวันเริ่ม (เช่น 2/11–1/12)', 'One month from the start date (e.g. 2/11–1/12)'], rp2_month: ['ตามเดือนปฏิทิน (1–สิ้นเดือน)', 'Calendar month (1st–end)'],
@@ -4346,15 +4353,33 @@ Object.assign(window.SummitI18n, {
       <div class="flex"><button class="btn primary" data-act="cdSave" ${pl.ok ? '' : 'disabled'}>${t('save')}</button><button class="btn" data-act="cdClose">${t('cancel')}</button></div>
       <p class="note">${t('cd_note')}</p></div></td></tr>`;
   }
+  /** v0.60 change-period calendar: tap dates like on the enrol form */
+  const rpDates = u => u.kind === 'custom' ? (u.sel || []).map(k => { const [groupId, date] = k.split('|'); return { groupId, date }; }) : null;
+  function rpCal(e, u) {
+    const st = STU(e.studentId) || {}, gs = [...new Set(e.sessions.map(x => x.groupId))].map(G).filter(g => g && g.id), closed = new Set(S.settings.closedDates || []);
+    const marked = new Set((S.attendance || []).filter(a => a.studentId === e.studentId).map(a => a.groupId + '|' + a.date)), sel = new Set(u.sel || []);
+    const grid = month => { const ds = E.monthDates(month), first = ds.length ? ds[0].dow : 0;
+      let h = D.dow[0].map((d, i) => `<div class="cal-h">${D.dow[lang() === 1 ? 1 : 0][i]}</div>`).join('') + '<span></span>'.repeat(first);
+      h += ds.map(d => { const opts = gs.filter(g => g.days.includes(d.dow));
+        if (closed.has(d.key)) return `<button class="cal off" disabled>${d.day}<small>${t('t_closed')}</small></button>`;
+        if (!opts.length) return `<button class="cal off" disabled>${d.day}</button>`;
+        return opts.map(g => { const k = g.id + '|' + d.key, on = sel.has(k), lock = on && marked.has(k), off = E.classOff(S, g.id, d.key);
+          return `<button class="cal ${on ? 'sel' : ''} ${off ? 'off' : ''}" ${lock || off ? 'disabled' : ''} data-act="rpPick" data-k="${k}" aria-pressed="${on}" title="${esc(g.code)}">${d.day}<small>${lock ? '🔒' : opts.length > 1 ? esc(g.code) : on ? '✓' : ''}</small></button>`; }).join('').replace(/^/, opts.length > 1 ? '<div style="display:flex;flex-direction:column;gap:2px">' : '') + (opts.length > 1 ? '</div>' : ''); }).join('');
+      return `<h4 style="margin:8px 0 0">${mm(month)}</h4><div class="cal-grid">${h}</div>`; };
+    const m0 = u.calM || (u.sel && u.sel.length ? [...u.sel].map(k => k.split('|')[1]).sort()[0] : E.period(e).from).slice(0, 7);
+    return `<div class="spaced" style="margin-top:6px"><span class="tiny">${t('rp2_calHelp')}</span><div class="flex"><button class="btn sm" data-act="rpCalM" data-d="-1">‹</button><button class="btn sm" data-act="rpCalM" data-d="1">›</button></div></div>
+      ${grid(m0)}${grid(E.shiftMonth(m0, 1))}<p class="tiny muted">${t('rp2_count2', { n: sel.size })} · 🔒 ${t('rp2_locked')}</p>`;
+  }
   function rpRow(e) {
-    const u = ui.students.rp, pl = E.planPeriod(S, e.id, { ...u, trimNext: u.trimNext === '1' }, today()), cur = E.period(e);
+    const u = ui.students.rp, pl = E.planPeriod(S, e.id, { ...u, dates: rpDates(u), trimNext: u.trimNext === '1' }, today()), cur = E.period(e);
     const dates = pl.sessions ? [...new Set(pl.sessions.map(x => x.groupId))].map(gid => `<div class="tiny"><b>${esc(G(gid).code)}</b>: ${pl.sessions.filter(x => x.groupId === gid).map(x => dd(x.date).slice(0, 5)).join(', ')}</div>`).join('') : '';
     return `<tr class="del-row"><td colspan="8"><div class="card" style="margin:6px 0"><h3>📅 ${t('rp2_title')}</h3>
       <p class="tiny muted">${t('rp2_now', { a: dd(cur.from), b: dd(cur.to), n: e.sessions.length })}</p>
-      <div class="fields">${fld(t('rp2_kind'), sel('students.rp.kind', [['span', t('rp2_span')], ['month', t('rp2_month')], ['pack', t('rp2_pack')]]))}
-        ${u.kind === 'month' ? fld(t('month'), inp('students.rp.month', 'month', 'data-live')) : fld(t('rp2_from'), inp('students.rp.from', 'date', 'data-live'))}
+      <div class="fields">${fld(t('rp2_kind'), sel('students.rp.kind', [['custom', t('rp2_custom')], ['span', t('rp2_span')], ['month', t('rp2_month')], ['pack', t('rp2_pack')]]))}
+        ${u.kind === 'custom' ? '' : u.kind === 'month' ? fld(t('month'), inp('students.rp.month', 'month', 'data-live')) : fld(t('rp2_from'), inp('students.rp.from', 'date', 'data-live'))}
         ${u.kind === 'pack' ? fld(t('rp2_count'), inp('students.rp.count', 'number', 'min="1" max="40" data-live')) : ''}</div>
-      ${pl.from ? `<div class="alert ${pl.ok ? 'ok' : 'warn'}">${t('rp2_new', { a: dd(pl.from), b: dd(pl.to), n: pl.sessions.length })}</div>${dates}` : ''}
+      ${u.kind === 'custom' ? rpCal(e, u) : ''}
+      ${pl.from ? `<div class="alert ${pl.ok ? 'ok' : 'warn'}">${t(u.kind === 'custom' ? 'rp2_newC' : 'rp2_new', { a: dd(pl.from), b: dd(pl.to), n: pl.sessions.length })}</div>${dates}` : ''}
       ${pl.newPrice != null && pl.oldPrice != null && pl.newPrice !== pl.oldPrice ? `<p>${t('rp2_price', { a: money(pl.oldPrice), b: money(pl.newPrice) })}</p>${fld(t('rp2_priceQ'), sel('students.rp.reprice', [['', t('rp2_keep', { a: money(pl.oldPrice) })], ['1', t('rp2_use', { a: money(pl.newPrice) })]]))}` : ''}
       ${pl.overlap && pl.overlap.length ? `<div class="alert warn">${t('rp2_ov', { x: pl.overlap.map(o => (o.kind === 'span' ? dd(o.label) : mm(o.label)) + ': ' + o.dates.map(d => dd(d).slice(0, 5)).join(', ')).join(' · ') })}</div>${fld(t('rp2_ovQ'), sel('students.rp.trimNext', [['', t('rp2_ovNo')], ['1', t('rp2_ovYes')]]))}` : ''}
       ${pl.errors && pl.errors.length ? pl.errors.map(k => `<div class="alert err">${esc(t('err_' + k))}${k === 'attOutside' ? ' ' + pl.marked.map(dd).join(', ') : ''}</div>`).join('') : ''}
@@ -5824,7 +5849,10 @@ Object.assign(window.SummitI18n, {
     slipDel: d => askBox(t('sl_delQ'), () => { const p = S.payments.find(x => x.id === d.id); if (p) { delete p.slip; slipDB.del(p.id); save(); ui.finance.slipView = null; } }, { danger: true }),
     scMonth: d => { ui.students.calM = E.shiftMonth(ui.students.calM || today().slice(0, 7), Number(d.k)); },
     rpOpen: d => { ui.students.cd = null;
-       const e = S.enrollments.find(x => x.id === d.id); if (!e) return; ui.students.rp = { id: e.id, kind: 'span', from: e.kind === 'span' ? e.spanFrom : (e.requestDate || E.period(e).from), month: e.month, count: Math.max(4, E.slotsOf(e.sessions).length * 4), reprice: '' }; },
+       const e = S.enrollments.find(x => x.id === d.id); if (!e) return; ui.students.rp = { id: e.id, kind: 'span', from: e.kind === 'span' ? e.spanFrom : (e.requestDate || E.period(e).from), month: e.month, count: Math.max(4, E.slotsOf(e.sessions).length * 4), reprice: '' };
+      ui.students.rp.kind = 'custom'; ui.students.rp.sel = e.sessions.filter(x => !x.makeup).map(x => x.groupId + '|' + x.date); },
+    rpPick: d => { const u = ui.students.rp, i = (u.sel = u.sel || []).indexOf(d.k); if (i >= 0) u.sel.splice(i, 1); else u.sel.push(d.k); },
+    rpCalM: d => { const u = ui.students.rp, m0 = u.calM || ((u.sel || []).map(k => k.split('|')[1]).sort()[0] || today()).slice(0, 7); u.calM = E.shiftMonth(m0, +d.d); },
     rpClose: () => { ui.students.rp = null; },
     cdOpen: d => { const e = S.enrollments.find(x => x.id === d.id); if (!e) return; const td = today(), nxt = e.sessions.filter(x => !x.makeup && x.date >= td).map(x => x.date).sort()[0] || td;
       ui.page = 'students'; ui.students.detail = e.studentId; ui.students.rp = null; ui.students.cd = { id: e.id, from: nxt, slots: E.slotsOf(e.sessions.filter(x => !x.makeup)).map(x => x.groupId + '|' + x.dow), reprice: '' };
@@ -5833,7 +5861,7 @@ Object.assign(window.SummitI18n, {
     cdClose: () => { ui.students.cd = null; },
     cdSave: () => { const u = ui.students.cd, slots = u.slots.map(k => { const [groupId, dow] = k.split('|'); return { groupId, dow: +dow }; });
       const r = E.applyDays(S, u.id, { from: u.from, slots, reprice: u.reprice === '1' }, today()); if (r.ok) { save(); ui.students.cd = null; toast(t('cd_done')); } else showResult(r); },
-    rpSave: () => { const u = ui.students.rp, r = E.applyPeriod(S, u.id, { ...u, reprice: u.reprice === '1', trimNext: u.trimNext === '1' }, today()); if (r.ok) { save(); ui.students.rp = null; toast(t('rp2_done', { a: dd(r.plan.from), b: dd(r.plan.to) })); } else toast(t('err_' + r.errors[0]), 'err'); },
+    rpSave: () => { const u = ui.students.rp, r = E.applyPeriod(S, u.id, { ...u, dates: rpDates(u), reprice: u.reprice === '1', trimNext: u.trimNext === '1' }, today()); if (r.ok) { save(); ui.students.rp = null; toast(t('rp2_done', { a: dd(r.plan.from), b: dd(r.plan.to) })); } else toast(t('err_' + r.errors[0]), 'err'); },
     editReqDate: d => { const e = S.enrollments.find(x => x.id === d.id); if (!e) return;
       askBox(t('rd_q'), v => { const m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(String(v).trim()); let iso = String(v).trim();
         if (m) { let y = Number(m[3]); if (y > 2400) y -= 543; iso = y + '-' + E.pad(m[2]) + '-' + E.pad(m[1]); }
@@ -6074,7 +6102,7 @@ Object.assign(window.SummitI18n, {
     document.documentElement.lang = lang() ? 'en' : 'th';
     applyTheme();
     const hid = (PREF.hideNav || []).filter(p => !['dashboard', 'settings'].includes(p));
-    $('#brand').innerHTML = (S.settings.logo ? `<img src="${S.settings.logo}" alt="">` : '') + `<b>${S.settings.logo ? esc(S.settings.schoolName || 'SUMMIT NEXT') : '🏔️ SUMMIT NEXT'}</b><small>School ERP v0.59</small>`;
+    $('#brand').innerHTML = (S.settings.logo ? `<img src="${S.settings.logo}" alt="">` : '') + `<b>${S.settings.logo ? esc(S.settings.schoolName || 'SUMMIT NEXT') : '🏔️ SUMMIT NEXT'}</b><small>School ERP v0.60</small>`;
     const ai = allActions(), cnt = keys => ai.filter(i => keys.includes(i.key)).reduce((a, i) => a + i.n, 0), urgent = keys => ai.some(i => keys.includes(i.key) && i.sev === 3);
     const BADGE = { enroll: ['pending', 'review', 'offerSoon'], attendance: ['attendance'], leads: ['leadsNew', 'trialFollow', 'trialMoved', 'trialToday'], finance: ['overdue', 'refundLeft'], tax: ['txWht', 'txSso', 'txCert', 'txPnd1k', 'txPnd50', 'txPnd51', 'txVat', 'txSetup', 'txClose'], books: ['bkUnpaid', 'bkAccrOld', 'bkReview'] };
     const easy = isEasy(), EASY = ['dashboard', 'attendance', 'students', 'enroll', 'finance', 'shop', 'books'];
